@@ -124,7 +124,7 @@ call MPI_Reduce(erri,errsum,1,OCFD_DATA_TYPE,MPI_SUM,0,MPI_COMM_WORLD,status,ier
 
 
 if (my_id==0) then
-	err1norm2=sqrt(errsum)/dble(nx_global)
+	err1norm2=sqrt(errsum/dble(nx_global))
 	if (iii>1) then
 		rate_globle=dlog(err2norm2/err1norm2)/dlog(2.d0)
 	end if

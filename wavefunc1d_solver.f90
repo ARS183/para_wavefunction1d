@@ -21,14 +21,6 @@ subroutine wavefunc1d_solver(x,u,uexat,nx,hx,dt,Nt)
 end subroutine wavefunc1d_solver
 
 
-
-
-
-
-
-
-
-
 subroutine RK4(nx,u,dt,hx)	!4½×RK·½·¨
     implicit none
     include 'openNS3d.h'
