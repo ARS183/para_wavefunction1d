@@ -4,17 +4,12 @@ include 'openNS3d.h'
 real(kind=OCFD_REAL_KIND),allocatable :: x(:),u(:),d2f(:),df(:),uexat(:)
 real(kind=OCFD_REAL_KIND),allocatable :: R(:)
 real(kind=OCFD_REAL_KIND),allocatable :: xx(:),temp_x(:)
-real(kind=OCFD_REAL_KIND) :: time_start,time_end,ctime,dt,T
+real(kind=OCFD_REAL_KIND) :: time_start,time_end,ctime,TT
 real(kind=OCFD_REAL_KIND):: pi,erri,err1norm2,err2norm2,errsum,rate_globle
 integer :: ka,k,i,kid,i_global,ii,iii,npx1,npx2,my_mod1,Nt
 character*100 filename2
 
 pi=datan(1.d0)*4.d0
-erri=0.d0
-T=1.0d-8/1.d0
-dt=1.0d-8/1.d0
-Nt=T/dt
-
 
 call MPI_INIT(ierr)
 call MPI_COMM_SIZE(MPI_COMM_WORLD,np_size,ierr)
@@ -28,12 +23,18 @@ if (my_id==0) then
 
 end if
 
-
-do iii=1,8
+TT=1.0d-8/1.d0
+dt=1.0d-8/1.d0
+Nt=TT/dt
+do iii=1,5
+!iii=1
 
 	! call read_parameter()
-	nx_global=8*2**iii+1
-	slx=1.d0
+	erri=0.d0
+	errsum=0.d0
+
+	nx_global=10*2**iii+1
+	slx=10.d0
 	npx0=np_size
 	hx=slx/dble(nx_global-1)
 
@@ -108,18 +109,18 @@ endif
 
 time_start=MPI_WTIME()
 
-call wavefunc1d_solver(x,u,uexat,nx,hx,dt,Nt)
+call wavefunc1d_solver(x,u,uexat,Nt)
 
 do i=1,nx
-	erri = erri+(u(i)-uexat(i))**2
+	erri=erri+(u(i)-uexat(i))**2
 enddo
 
 call MPI_Reduce(erri,errsum,1,OCFD_DATA_TYPE,MPI_SUM,0,MPI_COMM_WORLD,status,ierr)
 
        
-            !write (filename2,"('file-' I4.4 '.dat')") my_id
+           ! write (filename2,"('file-' I4.4 '.dat')") my_id
             !open(unit=my_id,file=filename2)
-            !call display(df,nx,1)
+            !call display(u,nx,1)
             !close(my_id)
 
 
@@ -138,7 +139,7 @@ if (my_id==0) then
 		write(11,"(I7,3X,2(E12.4,3X))")nx_global,err1norm2,rate_globle
 	end if
 end if
-deallocate(x,u,d2f,df,dfexat)
+deallocate(x,u,d2f,df,uexat,R)
 enddo
 
 time_end=MPI_WTIME()
