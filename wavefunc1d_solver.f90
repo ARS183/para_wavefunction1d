@@ -49,7 +49,7 @@ subroutine RK4(u)
     call check_x1d(u3)
     call ComputeR(u3,R3)
 
-    u(1:nx)=u(1:nx)+(dt/6.d0)*(R(1:nx)+2.d0*R(1:nx)+2.d0*R2(1:nx)+R3(1:nx))
+    u(1:nx)=u(1:nx)+(dt/6.d0)*(R(1:nx)+2.d0*R1(1:nx)+2.d0*R2(1:nx)+R3(1:nx))
 
 !    deallocate(R1,R2,R3,u1,u2,u3)
     
