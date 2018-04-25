@@ -23,7 +23,7 @@ if (my_id==0) then
 
 end if
 
-TT=1.0d-8/1.d0
+TT=5000.0d-8/1.d0
 dt=1.0d-8/1.d0
 Nt=TT/dt
 do iii=1,5
