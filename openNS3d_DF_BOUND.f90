@@ -480,22 +480,28 @@
 !! Boundary
 subroutine OCFD_DF_BOUND_UCC45(u,f,n,h,flag)
 	include 'openNS3d.h'		
-	real(kind=OCFD_REAL_KIND)::h,pi
+	real(kind=OCFD_REAL_KIND)::h,pi,phi,k0
 	real(kind=OCFD_REAL_KIND)::u(1-LAP:n+LAP),f(1-LAP:n+LAP)
 	integer n,flag
 
 	pi=4.d0*datan(1.d0)
+	phi=50.d0
+	k0=0.838242d0/h
 
 	if (flag.eq.1) then
 !		f(1)=-2.d0*pi*(dsin(2.d0*pi*0.d0)-dcos(2.d0*pi*0.d0))
 !		f(2)=-2.d0*pi*(dsin(2.d0*pi*h)-dcos(2.d0*pi*h))
-		f(1)=-2.d0*(0.d0-5.d0)*exp(-(0.d0-5.d0)**2)
-		f(2)=-2.d0*(h-5.d0)*exp(-(h-5.d0)**2)
+		f(1)=-2.d0*phi*(0.d0-5.d0)*exp(-phi*(0.d0-5.d0)**2)*dsin(k0*0.d0)+ &
+		exp(-phi*(0.d0-5.d0)**2)*dcos(k0*0.d0)*k0
+		f(2)=-2.d0*phi*(h-5.d0)*exp(-phi*(h-5.d0)**2)*dsin(k0*h)+ &
+		exp(-phi*(h-5.d0)**2)*dcos(k0*h)*k0
 	elseif (flag.eq.2) then
 !		f(n)=-2.d0*pi*(dsin(2.d0*pi*1.d0)-dcos(2.d0*pi*1.d0))
 !		f(n-1)=-2.d0*pi*(dsin(2.d0*pi*(1.d0-h))-dcos(2.d0*pi*(1.d0-h)))
-		f(n)=-2.d0*(10.d0-5.d0)*exp(-(10.d0-5.d0)**2)
-		f(n-1)=-2.d0*((10.d0-h)-5.d0)*exp(-((10.d0-h)-5.d0)**2)
+		f(n)=-2.d0*phi*(10.d0-5.d0)*exp(-phi*(10.d0-5.d0)**2)*dsin(k0*10.d0)+ &
+		exp(-phi*(10.d0-5.d0)**2)*dcos(k0*10.d0)*k0
+		f(n-1)=-2.d0*phi*((10.d0-h)-5.d0)*exp(-phi*((10.d0-h)-5.d0)**2)* &
+		dsin(k0*(10.d0-h))+exp(-phi*((10.d0-h)-5.d0)**2)*dcos(k0*(10.d0-h))*k0
 	endif
 end subroutine
 
@@ -538,10 +544,10 @@ subroutine OCFD_D2F_BOUND_PADE4(u,s,n,h,flag)
 
 	if (flag.eq.1) then
 !		s(1)=-4.d0*pi2*dsin(2.d0*pi*0.d0)-4.d0*pi2*dcos(2.d0*pi*0.d0)
-		s(1)=(4.d0*(0.d0-5)**2-2.d0)*exp(-(0.d0-5.d0)**2)
+		s(1)=0.d0
 	elseif (flag.eq.2) then
 !		s(n)=-4.d0*pi2*dsin(2.d0*pi*1.d0)-4.d0*pi2*dcos(2.d0*pi*1.d0)
-		s(n)=(4.d0*(10.d0-5)**2-2.d0)*exp(-(10.d0-5.d0)**2)
+		s(n)=0.d0
 	endif
 
 end subroutine
