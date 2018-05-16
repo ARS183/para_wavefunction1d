@@ -480,36 +480,33 @@
 !! Boundary
 subroutine OCFD_DF_BOUND_UCC45(u,f,n,h,flag)
 	include 'openNS3d.h'		
-	real(kind=OCFD_REAL_KIND)::h,pi,phi,k0
+	real(kind=OCFD_REAL_KIND)::h,pi
 	real(kind=OCFD_REAL_KIND)::u(1-LAP:n+LAP),f(1-LAP:n+LAP)
 	integer n,flag
 
 	pi=4.d0*datan(1.d0)
-	phi=50.d0
-	k0=0.838242d0/h
 
 	if (flag.eq.1) then
 !		f(1)=-2.d0*pi*(dsin(2.d0*pi*0.d0)-dcos(2.d0*pi*0.d0))
 !		f(2)=-2.d0*pi*(dsin(2.d0*pi*h)-dcos(2.d0*pi*h))
-		f(1)=-2.d0*phi*(0.d0-5.d0)*exp(-phi*(0.d0-5.d0)**2)*dsin(k0*0.d0)+ &
-		exp(-phi*(0.d0-5.d0)**2)*dcos(k0*0.d0)*k0
-		f(2)=-2.d0*phi*(h-5.d0)*exp(-phi*(h-5.d0)**2)*dsin(k0*h)+ &
-		exp(-phi*(h-5.d0)**2)*dcos(k0*h)*k0
+!		f(1)=-2.d0*(0.d0-5.d0)*exp(-(0.d0-5.d0)**2)
+!		f(2)=-2.d0*(h-5.d0)*exp(-(h-5.d0)**2)
+		f(1)=0.d0
+		f(2)=0.d0
 	elseif (flag.eq.2) then
 !		f(n)=-2.d0*pi*(dsin(2.d0*pi*1.d0)-dcos(2.d0*pi*1.d0))
 !		f(n-1)=-2.d0*pi*(dsin(2.d0*pi*(1.d0-h))-dcos(2.d0*pi*(1.d0-h)))
-		f(n)=-2.d0*phi*(10.d0-5.d0)*exp(-phi*(10.d0-5.d0)**2)*dsin(k0*10.d0)+ &
-		exp(-phi*(10.d0-5.d0)**2)*dcos(k0*10.d0)*k0
-		f(n-1)=-2.d0*phi*((10.d0-h)-5.d0)*exp(-phi*((10.d0-h)-5.d0)**2)* &
-		dsin(k0*(10.d0-h))+exp(-phi*((10.d0-h)-5.d0)**2)*dcos(k0*(10.d0-h))*k0
+!		f(n)=-2.d0*(10.d0-5.d0)*exp(-(10.d0-5.d0)**2)
+!		f(n-1)=-2.d0*((10.d0-h)-5.d0)*exp(-((10.d0-h)-5.d0)**2)
+		f(n)=0.d0
+		f(n-1)=0.d0
 	endif
 end subroutine
 
 
 
 !! Subboundary
-!! 除npx==0以外的调用
-subroutine OCFD_DF_SB_UCC45(u,f,n,h)
+subroutine OCFD_DF_SB_UCC45_P(u,f,n,h)
 	include 'openNS3d.h'		
 	real(kind=OCFD_REAL_KIND)::h
     integer n
@@ -530,6 +527,101 @@ subroutine OCFD_DF_SB_UCC45(u,f,n,h)
 end subroutine
 
 
+subroutine OCFD_DF_SB_UCC45_M(u,f,n,h)
+	include 'openNS3d.h'		
+	real(kind=OCFD_REAL_KIND)::h
+    integer n
+	real(kind=OCFD_REAL_KIND)::a(-2:3)
+	real(kind=OCFD_REAL_KIND)::u(1-LAP:n+LAP),f(1-LAP:n+LAP)
+
+	
+	a(3)=0.0314739841972651d0
+	a(2)=-0.2407032543196588d0
+	a(1)=0.9814065086393177d0
+	a(0)=-0.3147398419726509d0
+	a(-1)=-0.5092967456803412d0
+	a(-2)=0.051859349136068184d0
+
+	f(n)=(a(-2)*u(n-2)+a(-1)*u(n-1) &
+	+a(0)*u(n)+a(1)*u(n+1)+a(2)*u(n+2)+a(3)*u(n+3))/h
+	
+end subroutine
+
+!!!===============================================================!!!
+
+
+!!!================================================================!!!
+!DF_SB2_UCC45,subboundary,cal by the opposite scheme                 !
+!!!================================================================!!!
+subroutine OCFD_DF_SB2_UCC45_P(u,f,s,n,h)
+	include 'openNS3d.h'		
+	real(kind=OCFD_REAL_KIND)::h,sig,esi,h2,h4,h5,h6
+    integer n
+	real(kind=OCFD_REAL_KIND)::r(1:2),d6f(1:2)
+	real(kind=OCFD_REAL_KIND)::u(1-LAP:n+LAP),f(1-LAP:n+LAP)
+	real(kind=OCFD_REAL_KIND)::s(1-LAP:n+LAP)
+
+	sig=0.54395d0
+!	esi=-0.01385977393639451d0
+	esi=-0.01820010801241671d0
+	h2=h*h
+	h4=h2*h2
+	h5=h4*h
+	h6=h4*h2
+
+	d6f(1)=(u(-2)-6.d0*u(-1)+15.d0*u(0)-20.d0*u(1) &
+	+15.d0*u(2)-6.d0*u(3)+u(4))/h6
+	d6f(2)=(u(-1)-6.d0*u(0)+15.d0*u(1)-20.d0*u(2) &
+	+15.d0*u(3)-6.d0*u(4)+u(5))/h6
+
+	r(1)=(3.d0*sig*u(3)+(42.d0+2.d0*sig)*u(2)+(-48.d0+12.d0*sig)*u(1) &
+	+(6.d0-18.d0*sig)*u(0)+sig*u(-1))/12.d0/h-(1.d0-sig)*h*s(1) &
+	& +(2.d0+sig)*esi*h5*d6f(1)+(1.d0+sig)*esi*h5*d6f(2)
+	r(2)=(-3.d0*sig*u(0)+(-42.d0-2.d0*sig)*u(1)+(48.d0-12.d0*sig)*u(2) &
+	+(-6.d0+18.d0*sig)*u(3)-sig*u(4))/12.d0/h+(1.d0-sig)*h*s(2)
+
+	f(1)=((2.d0+sig)*r(1)-(1.d0+sig)*r(2))/(3.d0+2.d0*sig)
+end subroutine
+
+!---------------------------------------------------------------------
+
+subroutine OCFD_DF_SB2_UCC45_M(u,f,s,n,h)
+	include 'openNS3d.h'		
+	real(kind=OCFD_REAL_KIND)::h,sig,esi,h2,h4,h5,h6
+    integer n
+	real(kind=OCFD_REAL_KIND)::r(n-1:n),d6f(n-1:n)
+	real(kind=OCFD_REAL_KIND)::u(1-LAP:n+LAP),f(1-LAP:n+LAP)
+	real(kind=OCFD_REAL_KIND)::s(1-LAP:n+LAP)
+
+	sig=0.54395d0
+!	esi=-0.01385977393639451d0
+	esi=-0.01820010801241671d0
+	h2=h*h
+	h4=h2*h2
+	h5=h4*h
+	h6=h4*h2
+
+	d6f(n)=(u(n-3)-6.d0*u(n-2)+15.d0*u(n-1)-20.d0*u(n) &
+	+15.d0*u(n+1)-6.d0*u(n+2)+u(n+3))/h6
+	d6f(n-1)=(u(n-4)-6.d0*u(n-3)+15.d0*u(n-2)-20.d0*u(n-1) &
+	+15.d0*u(n)-6.d0*u(n+1)+u(n+2))/h6
+
+	r(n-1)=(3.d0*sig*u(n+1)+(42.d0+2.d0*sig)*u(n)+(-48.d0+12.d0*sig)*u(n-1) &
+	+(6.d0-18.d0*sig)*u(n-2)+sig*u(n-3))/12.d0/h-(1.d0-sig)*h*s(n-1) 
+	r(n)=(-3.d0*sig*u(n-2)+(-42.d0-2.d0*sig)*u(n-1)+(48.d0-12.d0*sig)*u(n) &
+	+(-6.d0+18.d0*sig)*u(n+1)-sig*u(n+2))/12.d0/h+(1.d0-sig)*h*s(n) &
+	& -(2.d0+sig)*esi*h5*d6f(n)-(1.d0+sig)*esi*h5*d6f(n-1)
+
+	f(n)=((2.d0+sig)*r(n)-(1.d0+sig)*r(n-1))/(3.d0+2.d0*sig)
+end subroutine
+
+!!!================================================================!!!
+
+
+
+
+
+
 !!!=======================D2F_BOUND_PADE4=========================!!!
 !!boundary
 subroutine OCFD_D2F_BOUND_PADE4(u,s,n,h,flag)
@@ -544,9 +636,11 @@ subroutine OCFD_D2F_BOUND_PADE4(u,s,n,h,flag)
 
 	if (flag.eq.1) then
 !		s(1)=-4.d0*pi2*dsin(2.d0*pi*0.d0)-4.d0*pi2*dcos(2.d0*pi*0.d0)
+!		s(1)=(4.d0*(0.d0-5)**2-2.d0)*exp(-(0.d0-5.d0)**2)
 		s(1)=0.d0
 	elseif (flag.eq.2) then
 !		s(n)=-4.d0*pi2*dsin(2.d0*pi*1.d0)-4.d0*pi2*dcos(2.d0*pi*1.d0)
+!		s(n)=(4.d0*(10.d0-5)**2-2.d0)*exp(-(10.d0-5.d0)**2)
 		s(n)=0.d0
 	endif
 
@@ -574,4 +668,31 @@ subroutine OCFD_D2F_SB_PADE4(u,s,n,h,flag)
 		s(n)=((1.d0/144.d0)*u(n-3)-(1.d0/8.d0)*u(n-2)+(23.d0/16.d0)*u(n-1)-(95.d0/36.d0)*u(n) &
 		+(23.d0/16.d0)*u(n+1)-(1.d0/8.d0)*u(n+2)+(1.d0/144.d0)*u(n+3))/h2
 	endif
+end subroutine
+
+!!!============================================================!!!
+
+
+!!!=========================D6F_BOUND_CENTER=========================!!!
+!boundary
+subroutine OCFD_D6F_BOUND_CENTER(u,d6f,n,h,flag)
+	include 'openNS3d.h'		
+	real(kind=OCFD_REAL_KIND)::h,h2,h4,h6
+	real(kind=OCFD_REAL_KIND)::u(1-LAP:n+LAP),d6f(1-LAP:n+LAP)
+	integer n,flag
+
+	h2=h*h
+	h4=h2*h2
+	h6=h4*h2
+
+	if (flag==1) then
+		d6f(1)=0.d0
+		d6f(2)=0.d0
+		d6f(3)=0.d0
+	elseif (flag==2) then
+		d6f(n)=0.d0
+		d6f(n-1)=0.d0
+		d6f(n-2)=0.d0
+	endif
+
 end subroutine

@@ -134,25 +134,8 @@ subroutine ComputeR(u,R)
     real(kind=OCFD_REAL_KIND)::df(1-LAP:nx+LAP),R(1-LAP:nx+LAP)
 !	integer :: nx
 
-    if (npx==0) then
-        call OCFD_D2F_BOUND_PADE4(u,d2f,nx,hx,1)
-        call OCFD_D2F_SB_PADE4(u,d2f,nx,hx,1)
-        call D2F_PADE4(u,d2f,nx,hx)
-        call OCFD_DF_BOUND_UCC45(u,df,nx,hx,1)
-        call DF_UCC45_P(u,d2f,df,nx,hx,1)
-    elseif (npx==npx0-1) then
-        call OCFD_D2F_BOUND_PADE4(u,d2f,nx,hx,2)
-        call OCFD_D2F_SB_PADE4(u,d2f,nx,hx,2)
-        call D2F_PADE4(u,d2f,nx,hx)
-        call OCFD_DF_SB_UCC45(u,df,nx,hx)
-        call OCFD_DF_BOUND_UCC45(u,df,nx,hx,2)
-        call DF_UCC45_P(u,d2f,df,nx,hx,2)
-    else
-        call OCFD_D2F_SB_PADE4(u,d2f,nx,hx,0)
-        call D2F_PADE4(u,d2f,nx,hx)
-        call OCFD_DF_SB_UCC45(u,df,nx,hx)
-        call DF_UCC45_P(u,d2f,df,nx,hx,0)
-    endif
+    call Du2Dx_PADE4(u,d2f)
+    call DuDx_UCC_UpWind(u,d2f,df)
 
     R(1:nx)=-0.5d0*df(1:nx)
 !    deallocate(d2f,df)

@@ -595,6 +595,53 @@ subroutine DF_UCC45_P(u,s,f,n,h,flag)
 	
 end subroutine
 
+
+
+subroutine DF_UCC45_M(u,s,f,n,h,flag)
+	include 'openNS3d.h'		
+	integer n,i,flag
+	real(kind=OCFD_REAL_KIND)::h,sig,pi
+	real(kind=OCFD_REAL_KIND)::u(1-LAP:n+LAP),f(1-LAP:n+LAP)
+	real(kind=OCFD_REAL_KIND)::d(1-LAP:n+LAP),s(1-LAP:n+LAP)
+
+	sig=0.54395d0
+	pi=4.d0*datan(1.d0)
+
+	!更一般的，f(1)在调用本函数前先调用边界函数计算出来
+
+	if (flag==1) then
+		do i=n-1,3,-1
+			d(i)=(3.d0*sig*u(i+2)+(42.d0+2.d0*sig)*u(i+1)+(-48.d0+12.d0*sig)*u(i) &
+			+(6.d0-18.d0*sig)*u(i-1)+sig*u(i-2))/12.d0/h-(1.d0-sig)*h*s(i)
+			f(i)=(d(i)-(1.d0+sig)*f(i+1))/(2.d0+sig)
+		enddo
+	elseif (flag==2) then
+		do i=n-2,1,-1
+			d(i)=(3.d0*sig*u(i+2)+(42.d0+2.d0*sig)*u(i+1)+(-48.d0+12.d0*sig)*u(i) &
+			+(6.d0-18.d0*sig)*u(i-1)+sig*u(i-2))/12.d0/h-(1.d0-sig)*h*s(i)
+			f(i)=(d(i)-(1.d0+sig)*f(i+1))/(2.d0+sig)
+		enddo
+	elseif (flag==0) then
+		do i=n-1,1,-1
+			d(i)=(3.d0*sig*u(i+2)+(42.d0+2.d0*sig)*u(i+1)+(-48.d0+12.d0*sig)*u(i) &
+			+(6.d0-18.d0*sig)*u(i-1)+sig*u(i-2))/12.d0/h-(1.d0-sig)*h*s(i)
+			f(i)=(d(i)-(1.d0+sig)*f(i+1))/(2.d0+sig)
+		enddo
+	elseif (flag==12) then   !chuan xing
+		do i=n-2,3,-1
+			d(i)=(3.d0*sig*u(i+2)+(42.d0+2.d0*sig)*u(i+1)+(-48.d0+12.d0*sig)*u(i) &
+			+(6.d0-18.d0*sig)*u(i-1)+sig*u(i-2))/12.d0/h-(1.d0-sig)*h*s(i)
+			f(i)=(d(i)-(1.d0+sig)*f(i+1))/(2.d0+sig)
+		enddo
+	endif
+	
+end subroutine
+
+
+
+!---------------------------------------------------------------------
+!二阶导数
+!---------------------------------------------------------------------
 subroutine D2F_PADE4(u,s,n,h)
 	include 'openNS3d.h'		
 	integer n,i
@@ -623,7 +670,50 @@ subroutine D2F_PADE4(u,s,n,h)
 	s(2:n-1)=right(2:n-1)
 end subroutine
 
-	
+!--------------------------------------------------------------------
+!六阶导数D6F_Center
+!--------------------------------------------------------------------	
+subroutine D6F_Center(u,d6f,n,h,flag)
+	include 'openNS3d.h'		
+	integer n,i,flag
+	real(kind=OCFD_REAL_KIND)::h,h2,h4,h6
+	real(kind=OCFD_REAL_KIND)::u(1-LAP:n+LAP),d6f(1-LAP:n+LAP)
+
+	h2=h*h
+	h4=h2*h2
+	h6=h4*h2
+
+	if (flag==1) then
+		!包含左边边界
+		do i=4,n
+			d6f(i)=(u(i-3)-6.d0*u(i-2)+15.d0*u(i-1)-20.d0*u(i) &
+			+15.d0*u(i+1)-6.d0*u(i+2)+u(i+3))/h6
+		enddo
+	elseif (flag==2) then
+		!包含右边边界
+		do i=1,n-3
+			d6f(i)=(u(i-3)-6.d0*u(i-2)+15.d0*u(i-1)-20.d0*u(i) &
+			+15.d0*u(i+1)-6.d0*u(i+2)+u(i+3))/h6
+		enddo
+	elseif (flag==12) then
+		!串行
+		do i=4,n-3
+			d6f(i)=(u(i-3)-6.d0*u(i-2)+15.d0*u(i-1)-20.d0*u(i) &
+			+15.d0*u(i+1)-6.d0*u(i+2)+u(i+3))/h6
+		enddo
+	elseif (flag==0) then
+		!内部区域
+		do i=1,n
+			d6f(i)=(u(i-3)-6.d0*u(i-2)+15.d0*u(i-1)-20.d0*u(i) &
+			+15.d0*u(i+1)-6.d0*u(i+2)+u(i+3))/h6
+		enddo
+	endif
+
+end subroutine
+
+!--------------------------------------------------------------------------!
+!--------------------------------------------------------------------------!
+
 
 !!===========追赶法===========!!
 subroutine trid(n0,n,a,b,c,d)
@@ -656,6 +746,6 @@ subroutine trid(n0,n,a,b,c,d)
 	end do	  
 	
 	return
-end	
+end	subroutine
     
 
