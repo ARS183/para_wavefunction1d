@@ -168,7 +168,7 @@ subroutine analyticSol_TKS_u0(x,u)
     real(kind=OCFD_REAL_KIND):: deltat,phi
     phi=50.d0
  !    k0=0.838242d0/hx
-    k0=0.7857d0/hx
+    k0=0.6d0/hx
         	
     do i=1,nx
         u(i)=exp(-phi*(x(i)-1.5d0)**2)*dsin(k0*x(i))
@@ -184,7 +184,7 @@ subroutine analyticSol_TKS_uexat(x,uexat,deltat,nt)
     real(kind=OCFD_REAL_KIND):: deltat,phi,c
     phi=50.d0
 !    k0=0.838242d0/hx
-    k0=0.7857d0/hx
+    k0=0.6d0/hx
     c=0.5d0
         	
     do i=1,nx
